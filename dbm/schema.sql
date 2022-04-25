@@ -1,4 +1,4 @@
-CREATE TABLE news_item(
+CREATE TABLE books_item(
     id uuid DEFAULT uuid_generate_v4 (),
     bookskind character varying(100) NOT NULL,
     bookname character varying(100) NOT NULL,
