@@ -24,6 +24,7 @@ func main() {
 	//users
 	router.POST("/usersPost", userPost)
 	router.GET("/usersGet", userGet)
+	router.PATCH("/usersUpdate/:id", userUpdate)
 
 	router.Run("localhost:8080")
 }
@@ -72,4 +73,18 @@ func userPost(c *gin.Context) {
 func userGet(c *gin.Context) {
 	usersrespons := q.UserGet()
 	c.JSON(http.StatusOK, gin.H{"data": usersrespons})
+}
+func userUpdate(c *gin.Context) {
+	id := c.Param("id")
+	var updateuser *dto.User
+
+	if err := c.BindJSON(&updateuser); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	users := &dto.User{
+		UserName:     updateuser.UserName,
+		UserLastName: updateuser.UserLastName}
+	result := q.UserUpdate(*users, id)
+	c.JSON(http.StatusOK, gin.H{"data":result})
+
 }

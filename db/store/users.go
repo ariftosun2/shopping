@@ -2,11 +2,10 @@ package store
 
 import (
 	"context"
+	"log"
 	"shopping-servis/db/dto"
 	"time"
-	"log"
 )
-
 
 func (r *ShoppingRepo) CreateUsersItem(request dto.User) *dto.ResponsUser {
 	var lastInsertID string
@@ -15,14 +14,14 @@ func (r *ShoppingRepo) CreateUsersItem(request dto.User) *dto.ResponsUser {
 		return nil
 	}
 	return &dto.ResponsUser{
-		Id:        lastInsertID,
-		UserName: request.UserName,
-		UserLastName:      request.UserLastName,
+		Id:           lastInsertID,
+		UserName:     request.UserName,
+		UserLastName: request.UserLastName,
 	}
 }
 
 func (r *ShoppingRepo) insertUsersItem(request dto.User) (string, error) {
-	 Db := OpenConnection()
+	Db := OpenConnection()
 
 	sql := "INSERT INTO user_item(username,lastname,created) VALUES($1,$2,$3) returning id;"
 	row := Db.QueryRowContext(context.Background(), sql, request.UserName, request.UserLastName, time.Now())
@@ -43,10 +42,31 @@ func (r *ShoppingRepo) UserGet() *[]dto.ResponsUser {
 	defer Db.Close()
 	for rows.Next() {
 		response := dto.ResponsUser{}
-		// var fileResponse []string
-		
-		err:=rows.Scan(&response.Id, &response.UserName, &response.UserLastName,&response.Time)
-		if err!=nil{
+
+		err := rows.Scan(&response.Id, &response.UserName, &response.UserLastName, &response.Time)
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+		requests = append(requests, response)
+	}
+
+	return &requests
+}
+func (r *ShoppingRepo) UserUpdate(request dto.User, id string) *[]dto.ResponsUser {
+	Db := OpenConnection()
+	sqlStatement := `UPDATE user_item SET  username= $2, lastname = $3,created=$4 WHERE id = $1 RETURNING id,username,lastname,created;`
+	rows, err := Db.Query(sqlStatement, id, request.UserName, request.UserLastName, time.Now())
+	if err != nil {
+		log.Fatal(err)
+	}
+	var requests []dto.ResponsUser
+
+	defer Db.Close()
+	for rows.Next() {
+		response := dto.ResponsUser{}
+
+		err := rows.Scan(&response.Id, &response.UserName, &response.UserLastName, &response.Time)
+		if err != nil {
 			log.Fatalf(err.Error())
 		}
 		requests = append(requests, response)
