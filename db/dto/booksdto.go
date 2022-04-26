@@ -1,5 +1,7 @@
 package dto
 
+import "time"
+
 
 type Books struct{
 	BooksKind string `json:"bookskind"`
@@ -11,6 +13,7 @@ type ResponsBooks struct{
 	BooksKind string `json:"bookskind"`
 	Name  string `json:"name"`
 	Detail string `json:"detail"`
+	Time time.Time `json:"time"`
 }
 
 
