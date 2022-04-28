@@ -74,3 +74,13 @@ func (r *ShoppingRepo) UserUpdate(request dto.User, id string) *[]dto.ResponsUse
 
 	return &requests
 }
+func (r *ShoppingRepo)UserDelete(id string)bool{
+	Db:=OpenConnection()
+	sql:=`DELETE FROM user_item WHERE id=$1;`
+	_, err := Db.Query(sql, id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer Db.Close()
+	return true
+}
