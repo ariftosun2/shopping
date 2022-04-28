@@ -25,7 +25,7 @@ func main() {
 	router.POST("/usersPost", userPost)
 	router.GET("/usersGet", userGet)
 	router.PATCH("/usersUpdate/:id", userUpdate)
-
+	router.DELETE("/usersDelete/:id", userDelete)
 	router.Run("localhost:8080")
 }
 
@@ -85,6 +85,12 @@ func userUpdate(c *gin.Context) {
 		UserName:     updateuser.UserName,
 		UserLastName: updateuser.UserLastName}
 	result := q.UserUpdate(*users, id)
-	c.JSON(http.StatusOK, gin.H{"data":result})
+	c.JSON(http.StatusOK, gin.H{"data": result})
+
+}
+func userDelete(c *gin.Context) {
+	id := c.Param("id")
+	result := q.UserDelete(id)
+	c.JSON(http.StatusOK, gin.H{"data": result})
 
 }
