@@ -22,6 +22,7 @@ func main() {
 	router.GET("/booksGet", booksGet)
 
 	//users
+	router.POST("/usersLogin", userLogin)
 	router.POST("/usersPost", userPost)
 	router.GET("/usersGet", userGet)
 	router.PATCH("/usersUpdate/:id", userUpdate)
@@ -63,7 +64,9 @@ func userPost(c *gin.Context) {
 
 	users := &dto.User{
 		UserName:     postuser.UserName,
-		UserLastName: postuser.UserLastName}
+		UserLastName: postuser.UserLastName,
+		UserPassword: postuser.UserPassword,
+	}
 	//dto create
 	result := q.CreateUsersItem(*users)
 	fmt.Println(result)
@@ -83,7 +86,9 @@ func userUpdate(c *gin.Context) {
 	}
 	users := &dto.User{
 		UserName:     updateuser.UserName,
-		UserLastName: updateuser.UserLastName}
+		UserLastName: updateuser.UserLastName,
+		UserPassword: updateuser.UserPassword,
+	}
 	result := q.UserUpdate(*users, id)
 	c.JSON(http.StatusOK, gin.H{"data": result})
 
@@ -92,5 +97,23 @@ func userDelete(c *gin.Context) {
 	id := c.Param("id")
 	result := q.UserDelete(id)
 	c.JSON(http.StatusOK, gin.H{"data": result})
+}
+
+func userLogin(c *gin.Context) {
+
+	var loginuser *dto.LoginUser
+
+	if err := c.BindJSON(&loginuser); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	users := &dto.LoginUser{
+		UsersName:    loginuser.UsersName,
+		UserPassword: loginuser.UserPassword,
+	}
+	//dto create
+	result := q.UserLogin(users)
+	fmt.Println(result)
+	c.JSON(http.StatusOK, gin.H{"token": result})
 
 }
