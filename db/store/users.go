@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"log"
 	"shopping-servis/db/dto"
@@ -101,28 +100,34 @@ func (r *ShoppingRepo) UserDelete(id string) *[]dto.ResponsUser {
 	return &requests
 }
 
-func (r *ShoppingRepo) compareRecords(user *dto.LoginUser) bool {
+func (r *ShoppingRepo) compareRecords(user *dto.LoginUser) (bool, *dto.LoginUser) {
 	registy := r.UserGet()
 	for _, y := range *registy {
 		if y.UserName == user.UsersName && y.UserPassword == user.UserPassword {
-			return true
+			return true, &dto.LoginUser{
+				UsersName:    y.UserName,
+				UserPassword: y.UserPassword,
+			}
 		}
+
 	}
-	return false
+	return false, &dto.LoginUser{}
 }
 
 func (r *ShoppingRepo) UserLogin(user *dto.LoginUser) string {
 	var token string
-	var userlogin dto.LoginUser
-	b := r.compareRecords(user)
+	var b bool
+	var userlogin *dto.LoginUser
+	b, userlogin = r.compareRecords(user)
+
 	if b {
-		token, _ = GenerateJWT(&userlogin)
+		token, _ = GenerateJWT(userlogin)
 
 	}
 	return token
 }
 func GenerateJWT(user *dto.LoginUser) (string, error) {
-	var mySigningKey = []byte(user.UsersName)
+	var mySigningKey = []byte("secretkey")
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 
@@ -134,7 +139,7 @@ func GenerateJWT(user *dto.LoginUser) (string, error) {
 	tokenString, err := token.SignedString(mySigningKey)
 
 	if err != nil {
-		fmt.Errorf("Something Went Wrong: %s", err.Error())
+		log.Fatalf("Something Went Wrong: %s", err.Error())
 		return "", err
 	}
 	return tokenString, nil

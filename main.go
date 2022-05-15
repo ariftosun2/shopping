@@ -2,20 +2,25 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"log"
+	"net/http"
 	"shopping-servis/db/dto"
 	"shopping-servis/db/store"
+	"strings"
+	"time"
 )
 
 var q store.ShoppingRepo
 
 func main() {
-	router := gin.Default()
+	router :=gin.Default()
 
 	store.OpenConnection()
 	//router
+
+	protected := router.Group("/", authorizationMiddleware)
 
 	//books
 	router.POST("/booksPost", booksPost)
@@ -23,11 +28,18 @@ func main() {
 
 	//users
 	router.POST("/usersLogin", userLogin)
-	router.POST("/usersPost", userPost)
-	router.GET("/usersGet", userGet)
-	router.PATCH("/usersUpdate/:id", userUpdate)
-	router.DELETE("/usersDelete/:id", userDelete)
-	router.Run("localhost:8080")
+	protected.POST("/usersPost", userPost)
+	protected.GET("/usersGet", userGet)
+	protected.PATCH("/usersUpdate/:id", userUpdate)
+	protected.DELETE("/usersDelete/:id", userDelete)
+	/* router.Run("localhost:8080") */
+
+	httpServer := &http.Server{
+		Handler:      router,
+		Addr:         ":8080",
+		WriteTimeout: 15 * time.Second,
+	}
+	log.Fatal(httpServer.ListenAndServe())
 }
 
 func booksPost(c *gin.Context) {
@@ -116,4 +128,26 @@ func userLogin(c *gin.Context) {
 	fmt.Println(result)
 	c.JSON(http.StatusOK, gin.H{"token": result})
 
+}
+func authorizationMiddleware(c *gin.Context) {
+	s := c.Request.Header.Get("Authorization")
+
+	token := strings.TrimPrefix(s, "Bearer ")
+
+	if err := validateToken(token); err != nil {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+}
+
+func validateToken(token string) error {
+	_, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+
+		return []byte("secretkey"), nil
+	})
+
+	return err
 }
