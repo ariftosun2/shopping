@@ -29,5 +29,7 @@ func OpenConnection() *sql.DB {
 		panic(err)
 	}
 
+
+
 	return db
 }
