@@ -15,7 +15,7 @@ import (
 var q store.ShoppingRepo
 
 func main() {
-	router :=gin.Default()
+	router := gin.Default()
 
 	store.OpenConnection()
 	//router
@@ -28,7 +28,7 @@ func main() {
 
 	//users
 	router.POST("/usersLogin", userLogin)
-	protected.POST("/usersPost", userPost)
+	router.POST("/usersRecord", userRecord)
 	protected.GET("/usersGet", userGet)
 	protected.PATCH("/usersUpdate/:id", userUpdate)
 	protected.DELETE("/usersDelete/:id", userDelete)
@@ -64,7 +64,7 @@ func booksGet(c *gin.Context) {
 	booksrespons := q.BooksGet()
 	c.JSON(http.StatusOK, gin.H{"data": booksrespons})
 }
-func userPost(c *gin.Context) {
+func userRecord(c *gin.Context) {
 	var postuser *dto.User
 
 	// Call BindJSON to bind the received JSON to
@@ -79,8 +79,13 @@ func userPost(c *gin.Context) {
 		UserLastName: postuser.UserLastName,
 		UserPassword: postuser.UserPassword,
 	}
+	a := q.UserValidate(users)
+	var result *dto.ResponsUser
+	if a {
+		result = q.CreateUsersItem(*users)
+	}
 	//dto create
-	result := q.CreateUsersItem(*users)
+
 	fmt.Println(result)
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }

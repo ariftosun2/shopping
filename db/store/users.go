@@ -2,10 +2,12 @@ package store
 
 import (
 	"context"
-	"github.com/dgrijalva/jwt-go"
+	"fmt"
 	"log"
 	"shopping-servis/db/dto"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 func (r *ShoppingRepo) CreateUsersItem(request dto.User) *dto.ResponsUser {
@@ -20,6 +22,18 @@ func (r *ShoppingRepo) CreateUsersItem(request dto.User) *dto.ResponsUser {
 		UserLastName: request.UserLastName,
 		UserPassword: request.UserPassword,
 	}
+}
+func (r *ShoppingRepo) UserValidate(user *dto.User) bool {
+	registy := r.UserGet()
+	for _, y := range *registy {
+		if y.UserName == user.UserName && y.UserLastName == user.UserLastName {
+			fmt.Println("ayni ismim soy adi kullanilamaz")
+			return false
+		}
+
+	}
+
+	return true
 }
 
 func (r *ShoppingRepo) insertUsersItem(request dto.User) (string, error) {
