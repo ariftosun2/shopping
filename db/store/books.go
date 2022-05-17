@@ -30,10 +30,8 @@ func (r *ShoppingRepo) CreateBooksItem(request dto.Books) *dto.ResponsBooks {
 	}
 }
 
-
-
 func (r *ShoppingRepo) insertBooksItem(request dto.Books) (string, error) {
-	 Db := OpenConnection()
+	Db := OpenConnection()
 
 	sql := "INSERT INTO books_item(bookskind,bookname,detail,created) VALUES($1,$2,$3,$4) returning id;"
 	row := Db.QueryRowContext(context.Background(), sql, request.BooksKind, request.Name, request.Detail, time.Now())
@@ -54,9 +52,31 @@ func (r *ShoppingRepo) BooksGet() *[]dto.ResponsBooks {
 	for rows.Next() {
 		response := dto.ResponsBooks{}
 		// var fileResponse []string
-		
-		err:=rows.Scan(&response.Id, &response.BooksKind, &response.Name, &response.Detail,&response.Time)
-		if err!=nil{
+
+		err := rows.Scan(&response.Id, &response.BooksKind, &response.Name, &response.Detail, &response.Time)
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+		requests = append(requests, response)
+	}
+
+	return &requests
+}
+func (r *ShoppingRepo) BooksUpdate(request dto.Books, id string) *[]dto.ResponsBooks {
+	Db := OpenConnection()
+	sqlStatement := `UPDATE books_item SET  bookskind= $2, bookname = $3,created=$5,detail=$4 WHERE id = $1 RETURNING id,bookskind,bookname,detail,created;`
+	rows, err := Db.Query(sqlStatement, id, request.BooksKind, request.Name, request.Detail, time.Now())
+	if err != nil {
+		log.Fatal(err)
+	}
+	var requests []dto.ResponsBooks
+
+	defer Db.Close()
+	for rows.Next() {
+		response := dto.ResponsBooks{}
+
+		err := rows.Scan(&response.Id, &response.BooksKind, &response.Name, &response.Detail, &response.Time)
+		if err != nil {
 			log.Fatalf(err.Error())
 		}
 		requests = append(requests, response)
