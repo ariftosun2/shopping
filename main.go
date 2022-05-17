@@ -24,7 +24,7 @@ func main() {
 	protected := router.Group("/", authorizationMiddleware)
 
 	//books
-	router.POST("/booksPost", booksPost)
+	protected.POST("/booksPost", booksPost)
 	protected.GET("/booksGet", booksGet)
 	protected.PATCH("/booksUpdate/:id",booksUpdate)
 
