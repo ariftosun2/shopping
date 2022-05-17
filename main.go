@@ -18,13 +18,15 @@ func main() {
 	router := gin.Default()
 
 	store.OpenConnection()
-	//router
 
+
+	//authorization system
 	protected := router.Group("/", authorizationMiddleware)
 
 	//books
 	router.POST("/booksPost", booksPost)
-	router.GET("/booksGet", booksGet)
+	protected.GET("/booksGet", booksGet)
+	protected.PATCH("/booksUpdate/:id",booksUpdate)
 
 	//users
 	router.POST("/usersLogin", userLogin)
@@ -64,6 +66,23 @@ func booksGet(c *gin.Context) {
 	booksrespons := q.BooksGet()
 	c.JSON(http.StatusOK, gin.H{"data": booksrespons})
 }
+func booksUpdate(c *gin.Context){
+	id := c.Param("id")
+	var updateuser *dto.Books
+
+	if err := c.BindJSON(&updateuser); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	books:= &dto.Books{
+		BooksKind: updateuser.BooksKind,
+		Name:     updateuser.Name,
+		Detail: updateuser.Detail,
+	}
+	result := q.BooksUpdate(*books, id)
+	c.JSON(http.StatusOK, gin.H{"data": result})
+}
+
+
 func userRecord(c *gin.Context) {
 	var postuser *dto.User
 
