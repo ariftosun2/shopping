@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (r *ShoppingRepo) CreateUsersItem(request dto.User) *dto.ResponsUser {
@@ -114,10 +115,17 @@ func (r *ShoppingRepo) UserDelete(id string) *[]dto.ResponsUser {
 	return &requests
 }
 
+// Check password data and local control
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+//login username and password check
 func (r *ShoppingRepo) compareRecords(user *dto.LoginUser) (bool, *dto.LoginUser) {
 	registy := r.UserGet()
 	for _, y := range *registy {
-		if y.UserName == user.UsersName && y.UserPassword == user.UserPassword {
+		checkpassword := CheckPasswordHash(user.UserPassword, y.UserPassword)
+		if y.UserName == user.UsersName && checkpassword {
 			return true, &dto.LoginUser{
 				UsersName:    y.UserName,
 				UserPassword: y.UserPassword,
@@ -127,7 +135,7 @@ func (r *ShoppingRepo) compareRecords(user *dto.LoginUser) (bool, *dto.LoginUser
 	}
 	return false, &dto.LoginUser{}
 }
-
+//login result token
 func (r *ShoppingRepo) UserLogin(user *dto.LoginUser) string {
 	var token string
 	var b bool
@@ -140,6 +148,7 @@ func (r *ShoppingRepo) UserLogin(user *dto.LoginUser) string {
 	}
 	return token
 }
+//token generate
 func GenerateJWT(user *dto.LoginUser) (string, error) {
 	var mySigningKey = []byte("secretkey")
 	token := jwt.New(jwt.SigningMethodHS256)

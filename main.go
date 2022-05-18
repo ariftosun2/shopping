@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"shopping-servis/db/dto"
@@ -19,14 +20,13 @@ func main() {
 
 	store.OpenConnection()
 
-
 	//authorization system
 	protected := router.Group("/", authorizationMiddleware)
 
 	//books
 	protected.POST("/booksPost", booksPost)
 	protected.GET("/booksGet", booksGet)
-	protected.PATCH("/booksUpdate/:id",booksUpdate)
+	protected.PATCH("/booksUpdate/:id", booksUpdate)
 
 	//users
 	router.POST("/usersLogin", userLogin)
@@ -66,22 +66,21 @@ func booksGet(c *gin.Context) {
 	booksrespons := q.BooksGet()
 	c.JSON(http.StatusOK, gin.H{"data": booksrespons})
 }
-func booksUpdate(c *gin.Context){
+func booksUpdate(c *gin.Context) {
 	id := c.Param("id")
 	var updateuser *dto.Books
 
 	if err := c.BindJSON(&updateuser); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
-	books:= &dto.Books{
+	books := &dto.Books{
 		BooksKind: updateuser.BooksKind,
-		Name:     updateuser.Name,
-		Detail: updateuser.Detail,
+		Name:      updateuser.Name,
+		Detail:    updateuser.Detail,
 	}
 	result := q.BooksUpdate(*books, id)
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }
-
 
 func userRecord(c *gin.Context) {
 	var postuser *dto.User
@@ -92,12 +91,14 @@ func userRecord(c *gin.Context) {
 	if err := c.BindJSON(&postuser); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
+	password, _ := HashPassword(postuser.UserPassword)
 
 	users := &dto.User{
 		UserName:     postuser.UserName,
 		UserLastName: postuser.UserLastName,
-		UserPassword: postuser.UserPassword,
+		UserPassword: password,
 	}
+
 	a := q.UserValidate(users)
 	var result *dto.ResponsUser
 	if a {
@@ -107,6 +108,10 @@ func userRecord(c *gin.Context) {
 
 	fmt.Println(result)
 	c.JSON(http.StatusOK, gin.H{"data": result})
+}
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
 }
 
 func userGet(c *gin.Context) {
