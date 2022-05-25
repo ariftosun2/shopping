@@ -2,15 +2,18 @@ package main
 
 import (
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
+
 	"log"
 	"net/http"
 	"shopping-servis/db/dto"
 	"shopping-servis/db/store"
 	"strings"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
+
+	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var q store.ShoppingRepo
@@ -31,6 +34,8 @@ func main() {
 	//users
 	router.POST("/usersLogin", userLogin)
 	router.POST("/usersRecord", userRecord)
+	protected.POST("/logout", logout)
+
 	protected.GET("/usersGet", userGet)
 	protected.PATCH("/usersUpdate/:id", userUpdate)
 	protected.DELETE("/usersDelete/:id", userDelete)
@@ -153,9 +158,11 @@ func userLogin(c *gin.Context) {
 		UserPassword: loginuser.UserPassword,
 	}
 	//dto create
-	result := q.UserLogin(users)
-	fmt.Println(result)
-	c.JSON(http.StatusOK, gin.H{"token": result})
+	token, userLogin := q.UserLogin(users)
+	fmt.Println(userLogin)
+	c.SetCookie("username", loginuser.UsersName, 3600, "", "", false, true)
+	c.SetCookie("token", token, 3600, "", "", false, true)
+	c.JSON(http.StatusOK, gin.H{"token": token})
 
 }
 func authorizationMiddleware(c *gin.Context) {
@@ -179,4 +186,20 @@ func validateToken(token string) error {
 	})
 
 	return err
+}
+func logout(c *gin.Context) {
+	user, err1 := c.Cookie("username")
+	token, err2 := c.Cookie("token")
+
+	if err1 == nil && err2 == nil {
+		// Clear the cookies and
+		// respond with an HTTP success status
+		c.SetCookie("username", "", -1, "", "", false, true)
+		c.SetCookie("token", "", -1, "", "", false, true)
+		fmt.Println("cerezler silindi",token,":",user,":")
+		c.JSON(http.StatusOK, nil)
+	} else {
+		// Respond with an HTTP error
+		c.AbortWithStatus(http.StatusUnauthorized)
+	}
 }
