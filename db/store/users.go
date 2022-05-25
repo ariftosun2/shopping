@@ -120,6 +120,7 @@ func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
+
 //login username and password check
 func (r *ShoppingRepo) compareRecords(user *dto.LoginUser) (bool, *dto.LoginUser) {
 	registy := r.UserGet()
@@ -135,8 +136,10 @@ func (r *ShoppingRepo) compareRecords(user *dto.LoginUser) (bool, *dto.LoginUser
 	}
 	return false, &dto.LoginUser{}
 }
+
 //login result token
-func (r *ShoppingRepo) UserLogin(user *dto.LoginUser) string {
+func (r *ShoppingRepo) UserLogin(user *dto.LoginUser) (string, *dto.LoginUser) {
+
 	var token string
 	var b bool
 	var userlogin *dto.LoginUser
@@ -146,8 +149,9 @@ func (r *ShoppingRepo) UserLogin(user *dto.LoginUser) string {
 		token, _ = GenerateJWT(userlogin)
 
 	}
-	return token
+	return token, userlogin
 }
+
 //token generate
 func GenerateJWT(user *dto.LoginUser) (string, error) {
 	var mySigningKey = []byte("secretkey")
