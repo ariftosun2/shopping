@@ -125,11 +125,14 @@ func CheckPasswordHash(password, hash string) bool {
 func (r *ShoppingRepo) compareRecords(user *dto.LoginUser) (bool, *dto.LoginUser) {
 	registy := r.UserGet()
 	for _, y := range *registy {
-		checkpassword := CheckPasswordHash(user.UserPassword, y.UserPassword)
-		if y.UserName == user.UsersName && checkpassword {
-			return true, &dto.LoginUser{
-				UsersName:    y.UserName,
-				UserPassword: y.UserPassword,
+
+		if y.UserName == user.UsersName {
+			checkpassword := CheckPasswordHash(user.UserPassword, y.UserPassword)
+			if checkpassword {
+				return true, &dto.LoginUser{
+					UsersName:    y.UserName,
+					UserPassword: y.UserPassword,
+				}
 			}
 		}
 
