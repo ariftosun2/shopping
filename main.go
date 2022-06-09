@@ -114,6 +114,7 @@ func userRecord(c *gin.Context) {
 	fmt.Println(result)
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }
+
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(bytes), err
@@ -196,7 +197,7 @@ func logout(c *gin.Context) {
 		// respond with an HTTP success status
 		c.SetCookie("username", "", -1, "", "", false, true)
 		c.SetCookie("token", "", -1, "", "", false, true)
-		fmt.Println("cerezler silindi",token,":",user,":")
+		fmt.Println("cerezler silindi", token, ":", user, ":")
 		c.JSON(http.StatusOK, nil)
 	} else {
 		// Respond with an HTTP error
