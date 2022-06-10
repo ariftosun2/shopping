@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"shopping-servis/db/dto"
 	"time"
@@ -24,14 +23,39 @@ func (r *ShoppingRepo) CreateUsersItem(request dto.User) *dto.ResponsUser {
 		UserPassword: request.UserPassword,
 	}
 }
+func ValidateRecord(user *dto.User) (*[]dto.ResponsUser, error) {
+	Db := OpenConnection()
+
+	rows, err := Db.Query("SELECT * FROM user_item WHERE username = $1", user.UserName)
+	if err != nil {
+		return nil, err
+	}
+
+	var requests []dto.ResponsUser
+
+	defer Db.Close()
+	for rows.Next() {
+		response := dto.ResponsUser{}
+
+		err := rows.Scan(&response.Id, &response.UserName, &response.UserLastName, &response.UserPassword, &response.Time)
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+		requests = append(requests, response)
+	}
+
+	return &requests, nil
+}
+
 func (r *ShoppingRepo) UserValidate(user *dto.User) bool {
-	registy := r.UserGet()
-	for _, y := range *registy {
-		if y.UserName == user.UserName && y.UserLastName == user.UserLastName {
-			fmt.Println("ayni ismim soy adi kullanilamaz")
+	registy, err := ValidateRecord(user)
+	if err != nil {
+		panic(err)
+	}
+	for _, v := range *registy {
+		if v.UserName != "" {
 			return false
 		}
-
 	}
 
 	return true
@@ -120,13 +144,39 @@ func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
+func ValidateLogin(user *dto.LoginUser) (*[]dto.ResponsUser, error) {
+	Db := OpenConnection()
+
+	rows, err := Db.Query("SELECT * FROM user_item WHERE username = $1", user.UsersName)
+	if err != nil {
+		return nil, err
+	}
+
+	var requests []dto.ResponsUser
+
+	defer Db.Close()
+	for rows.Next() {
+		response := dto.ResponsUser{}
+
+		err := rows.Scan(&response.Id, &response.UserName, &response.UserLastName, &response.UserPassword, &response.Time)
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+		requests = append(requests, response)
+	}
+
+	return &requests, nil
+}
 
 //login username and password check
 func (r *ShoppingRepo) compareRecords(user *dto.LoginUser) (bool, *dto.LoginUser) {
-	registy := r.UserGet()
+	registy, err := ValidateLogin(user)
+	if err != nil {
+		panic(err)
+	}
 	for _, y := range *registy {
 
-		if y.UserName == user.UsersName {
+		if y.UserName != "" {
 			checkpassword := CheckPasswordHash(user.UserPassword, y.UserPassword)
 			if checkpassword {
 				return true, &dto.LoginUser{

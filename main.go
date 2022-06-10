@@ -25,15 +25,15 @@ func main() {
 
 	//authorization system
 	protected := router.Group("/", authorizationMiddleware)
-
+	public := router.Group("/")
 	//books
+	public.GET("/booksGet", booksGet)
 	protected.POST("/booksPost", booksPost)
-	protected.GET("/booksGet", booksGet)
 	protected.PATCH("/booksUpdate/:id", booksUpdate)
 
 	//users
-	router.POST("/usersLogin", userLogin)
-	router.POST("/usersRecord", userRecord)
+	public.POST("/usersLogin", userLogin)
+	public.POST("/usersRecord", userRecord)
 	protected.POST("/logout", logout)
 
 	protected.GET("/usersGet", userGet)
