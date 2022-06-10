@@ -25,15 +25,16 @@ func main() {
 
 	//authorization system
 	protected := router.Group("/", authorizationMiddleware)
-	public := router.Group("/")
+	//they will be loaded when opening the page
+	router.GET("/", HelloWeb)
 	//books
-	public.GET("/booksGet", booksGet)
+	router.GET("/booksGet", booksGet)
 	protected.POST("/booksPost", booksPost)
 	protected.PATCH("/booksUpdate/:id", booksUpdate)
 
 	//users
-	public.POST("/usersLogin", userLogin)
-	public.POST("/usersRecord", userRecord)
+	router.POST("/usersLogin", userLogin)
+	router.POST("/usersRecord", userRecord)
 	protected.POST("/logout", logout)
 
 	protected.GET("/usersGet", userGet)
@@ -49,6 +50,10 @@ func main() {
 	log.Fatal(httpServer.ListenAndServe())
 }
 
+func HelloWeb(c *gin.Context) {
+	booksrespons := q.BooksGet()
+	c.JSON(http.StatusOK, gin.H{"data": booksrespons})
+}
 func booksPost(c *gin.Context) {
 	var postbooks *dto.Books
 
